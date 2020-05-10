@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension.OfficeOpenXml", "Extension.OfficeOpenXml\Extension.OfficeOpenXml.csproj", "{5767EC4A-CE98-4381-95D7-C551224BEAD9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Extension.OfficeOpenXml", "Extension.OfficeOpenXml\Extension.OfficeOpenXml.csproj", "{5767EC4A-CE98-4381-95D7-C551224BEAD9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension.OfficeOpemXml.Tests", "Extension.OfficeOpemXml.Tests\Extension.OfficeOpemXml.Tests.csproj", "{540A7018-F44E-4924-8BFE-249286077D3F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{5767EC4A-CE98-4381-95D7-C551224BEAD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5767EC4A-CE98-4381-95D7-C551224BEAD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5767EC4A-CE98-4381-95D7-C551224BEAD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{540A7018-F44E-4924-8BFE-249286077D3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{540A7018-F44E-4924-8BFE-249286077D3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{540A7018-F44E-4924-8BFE-249286077D3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{540A7018-F44E-4924-8BFE-249286077D3F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
