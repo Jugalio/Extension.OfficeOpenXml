@@ -16,5 +16,12 @@ namespace Extension.OfficeOpemXml.Tests
             return Path.Combine(dir, name);
         }
 
+        public string GetResourcesFilePath(string name)
+        {
+            var dir = Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources");
+            Directory.CreateDirectory(dir);
+            return Path.Combine(dir, name);
+        }
+
     }
 }

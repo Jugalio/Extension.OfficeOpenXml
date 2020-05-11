@@ -3,43 +3,69 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace Extension.OfficeOpenXml.Excel
 {
+    /// <summary>
+    /// A new wrapper class for an excel document opened with open xml
+    /// </summary>
     public class ExcelFile
     {
+        /// <summary>
+        /// The spreadsheet document
+        /// </summary>
         public SpreadsheetDocument Document;
 
-        private WorkbookPart _workbookPart;
+        /// <summary>
+        /// The workbook part
+        /// </summary>
+        public WorkbookPart WorkbookPart;
+
+        /// <summary>
+        /// The workbook which is the direct child of the workbookpart
+        /// </summary>
         public Workbook Workbook;
 
-        private WorksheetPart _worksheetPart;
-        private Worksheet _worksheet;
-        public SheetData SheetData;
+        /// <summary>
+        /// A sheets element holds all sheets within this file
+        /// </summary>
         public Sheets Sheets;
 
+        /// <summary>
+        /// The styles part of this file
+        /// </summary>
         private WorkbookStylesPart _workbookStylesPart;
+
+        /// <summary>
+        /// The stylesheet for this file which holds all styles for this document
+        /// </summary>
         public Stylesheet Stylesheet;
 
+        /// <summary>
+        /// The list of sheets as wrapper objects
+        /// </summary>
         public List<ExcelSheet> SheetList = new List<ExcelSheet>();
 
         /// <summary>
-        /// Finalizer in order to clean
-        /// </summary>
-        ~ExcelFile()
-        {
-            if (Document != null) Document.Close();
-        }
-
-        /// <summary>
-        /// Opens a new excel file
+        /// Opens an exsiting excel file by its filenam
         /// </summary>
         /// <param name="fileName"></param>
         public void Open(string fileName, bool editable)
         {
             Document = SpreadsheetDocument.Open(fileName, editable);
+            LoadDocument();
+        }
+
+        /// <summary>
+        /// Opens an existing excel file from a filestream
+        /// </summary>
+        /// <param name="fileName"></param>
+        public void Open(FileStream stream, bool editable)
+        {
+            Document = SpreadsheetDocument.Open(stream, editable);
             LoadDocument();
         }
 
@@ -57,16 +83,27 @@ namespace Extension.OfficeOpenXml.Excel
         }
 
         /// <summary>
+        /// Creates a new file with the style copied from this one
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public ExcelFile CopyWithStyle(string fileName)
+        {
+            var file = new ExcelFile();
+            file.Create(fileName);
+            file.WorkbookPart.WorkbookStylesPart.Stylesheet = (Stylesheet)Stylesheet.CloneNode(true);
+            file.Stylesheet = file.WorkbookPart.WorkbookStylesPart.Stylesheet;
+            return file;
+        }
+
+        /// <summary>
         /// Adds a new sheet
         /// </summary>
         /// <param name="name"></param>
         public void AddSheet(string name)
         {
             var maxId = SheetList.Select(s => s.ThisSheet.SheetId).Max() ?? 0;
-
-            var id = _workbookPart.GetIdOfPart(_worksheetPart);
-            var sheet = new ExcelSheet();
-            sheet.Create(this, name, id, maxId + 1);
+            var sheet = new ExcelSheet(this, name, maxId + 1);
             SheetList.Add(sheet);
         }
 
@@ -76,19 +113,19 @@ namespace Extension.OfficeOpenXml.Excel
         private void LoadDocument()
         {
             //Add workbook part
-            _workbookPart = Document.WorkbookPart;
-            Workbook = _workbookPart.Workbook;
-
-            //Add worksheetpart
-            _worksheetPart = _workbookPart.WorksheetParts.FirstOrDefault();
-            SheetData = _worksheet.GetFirstChild<SheetData>();
-            _worksheet = _worksheetPart.Worksheet;
+            WorkbookPart = Document.WorkbookPart;
+            Workbook = WorkbookPart.Workbook;
 
             //Adds an empty sheets section
             Sheets = Workbook.Sheets;
+            // For each sheet, create a new sheet class
+            foreach (Sheet sheet in Sheets)
+            {
+                SheetList.Add(new ExcelSheet(this, sheet));
+            }
 
             //Adds an empty stylesheet
-            _workbookStylesPart = _workbookPart.WorkbookStylesPart;
+            _workbookStylesPart = WorkbookPart.WorkbookStylesPart;
             Stylesheet = _workbookStylesPart.Stylesheet;
         }
 
@@ -98,22 +135,16 @@ namespace Extension.OfficeOpenXml.Excel
         private void GenerateEmptyChildElements()
         {
             //Add workbook part
-            _workbookPart = Document.AddWorkbookPart();
+            WorkbookPart = Document.AddWorkbookPart();
             Workbook = new Workbook();
-            _workbookPart.Workbook = Workbook;
-
-            //Add worksheetpart
-            _worksheetPart = _workbookPart.AddNewPart<WorksheetPart>();
-            SheetData = new SheetData();
-            _worksheet = new Worksheet(SheetData);
-            _worksheetPart.Worksheet = _worksheet;
+            WorkbookPart.Workbook = Workbook;
 
             //Adds an empty sheets section
             Sheets = new Sheets();
             Workbook.AppendChild(Sheets);
 
             //Adds an empty stylesheet
-            _workbookStylesPart = _workbookPart.AddNewPart<WorkbookStylesPart>();
+            _workbookStylesPart = WorkbookPart.AddNewPart<WorkbookStylesPart>();
             Stylesheet = CreateDefaultStyleSheet();
             _workbookStylesPart.Stylesheet = Stylesheet;
         }
@@ -146,6 +177,16 @@ namespace Extension.OfficeOpenXml.Excel
             styleSheet = new Stylesheet(fonts, fills, borders, cellFormats);
 
             return styleSheet;
+        }
+
+        /// <summary>
+        /// Get the value of the shared string by its id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public SharedStringItem GetSharedStringItemById(int id)
+        {
+            return WorkbookPart.SharedStringTablePart.SharedStringTable.Elements<SharedStringItem>().ElementAt(id);
         }
 
         /// <summary>

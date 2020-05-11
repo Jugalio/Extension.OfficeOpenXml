@@ -16,4 +16,10 @@
     <ProjectReference Include="..\Extension.OfficeOpenXml\Extension.OfficeOpenXml.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Resources\Beispieltabelle.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

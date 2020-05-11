@@ -39,7 +39,25 @@ namespace Extension.OfficeOpemXml.Tests
             row.AddCell("5");
             row.AddCell(5);
             file.Save();
+
+            var a = row.GetCellByColumnName("A").GetValue();
+
             file.Document.Close();
+        }
+
+        /// <summary>
+        /// Loads a table and create copy
+        /// </summary>
+        [Test]
+        public void LoadTable()
+        {
+            var file = new ExcelFile();
+            var fileName = GetResourcesFilePath("Beispieltabelle.xlsx");
+            file.Open(fileName, false);
+
+            var copy = file.CopyWithStyle(GetGeneratedFilePath("Copied.xlsx"));
+            copy.Save();
+            copy.Document.Close();
         }
 
     }
