@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Extension.Utilities.ClassExtensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -94,6 +95,22 @@ namespace Extension.OfficeOpenXml.Excel
         public ExcelCell GetCellByColumnName(string name)
         {
             return Cells.FirstOrDefault(c => c.GetColumnName() == name);
+        }
+
+        /// <summary>
+        /// The value of a cell within the row by the index
+        /// </summary>
+        /// <returns></returns>
+        public ExcelCell GetCellByColumnIndex(uint index)
+        {
+            string start = "A";
+
+            for (uint i = 1; i < index; i++)
+            {
+                start = start.IterateUpperLetter();
+            }
+
+            return Cells.FirstOrDefault(c => c.GetColumnName() == start);
         }
 
         public void CopyCellsFromOtherDocument(List<ExcelCell> cells)

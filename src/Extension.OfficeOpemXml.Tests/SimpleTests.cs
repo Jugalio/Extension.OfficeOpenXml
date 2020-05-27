@@ -83,5 +83,18 @@ namespace Extension.OfficeOpemXml.Tests
             copy.Document.Close();
         }
 
+        /// <summary>
+        /// Copy rows to a new file
+        /// </summary>
+        [Test]
+        public void GetColumn()
+        {
+            var file = new ExcelFile();
+            var fileName = GetResourcesFilePath("Beispieltabelle.xlsx");
+            file.Open(fileName, false);
+            var sourceSheet = file.SheetList.First();
+            sourceSheet.Rows.First().GetCellByColumnIndex(28);
+        }
+
     }
 }

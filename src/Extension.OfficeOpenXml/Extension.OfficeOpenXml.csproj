@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Falk von Ohlen</Authors>
-    <Version>0.7.0</Version>
+    <Version>0.7.1</Version>
     <Description>An Extrension used to wrap around ms open xml</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryType>C#</RepositoryType>
