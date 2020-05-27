@@ -60,6 +60,16 @@ namespace Extension.OfficeOpenXml.Excel
         }
 
         /// <summary>
+        /// Opens an exsiting excel file by its filenam
+        /// </summary>
+        /// <param name="fileName"></param>
+        public void Open(string fileName, bool editable, OpenSettings settings)
+        {
+            Document = SpreadsheetDocument.Open(fileName, editable, settings);
+            LoadDocument();
+        }
+
+        /// <summary>
         /// Opens an existing excel file from a filestream
         /// </summary>
         /// <param name="fileName"></param>
@@ -83,6 +93,19 @@ namespace Extension.OfficeOpenXml.Excel
         }
 
         /// <summary>
+        /// Creates a new excel file and returns an instance for it
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public void Create(string fileName, ExcelSheet referenceSheet)
+        {
+            Document = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook);
+
+            GenerateEmptyChildElements();
+            AddSheet("Sheet1", referenceSheet);
+        }
+
+        /// <summary>
         /// Creates a new file with the style copied from this one
         /// </summary>
         /// <param name="fileName"></param>
@@ -97,6 +120,20 @@ namespace Extension.OfficeOpenXml.Excel
         }
 
         /// <summary>
+        /// Creates a new file with the style copied from this one
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public ExcelFile CopyWithStyle(string fileName, ExcelSheet referenceSheet)
+        {
+            var file = new ExcelFile();
+            file.Create(fileName, referenceSheet);
+            file.WorkbookPart.WorkbookStylesPart.Stylesheet = (Stylesheet)Stylesheet.CloneNode(true);
+            file.Stylesheet = file.WorkbookPart.WorkbookStylesPart.Stylesheet;
+            return file;
+        }
+
+        /// <summary>
         /// Adds a new sheet
         /// </summary>
         /// <param name="name"></param>
@@ -104,6 +141,17 @@ namespace Extension.OfficeOpenXml.Excel
         {
             var maxId = SheetList.Select(s => s.ThisSheet.SheetId).Max() ?? 0;
             var sheet = new ExcelSheet(this, name, maxId + 1);
+            SheetList.Add(sheet);
+        }
+
+        /// <summary>
+        /// Adds a new sheet
+        /// </summary>
+        /// <param name="name"></param>
+        public void AddSheet(string name, ExcelSheet referenceSheet)
+        {
+            var maxId = SheetList.Select(s => s.ThisSheet.SheetId).Max() ?? 0;
+            var sheet = new ExcelSheet(this, name, maxId + 1, referenceSheet);
             SheetList.Add(sheet);
         }
 

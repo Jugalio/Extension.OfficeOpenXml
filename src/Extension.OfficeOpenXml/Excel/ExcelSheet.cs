@@ -4,6 +4,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace Extension.OfficeOpenXml.Excel
@@ -65,6 +66,33 @@ namespace Extension.OfficeOpenXml.Excel
         }
 
         /// <summary>
+        /// Creates an empty sheet
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="name"></param>
+        public ExcelSheet(ExcelFile file, string name, uint sheetId, ExcelSheet referenceSheet)
+        {
+            ExcelFile = file;
+
+            //Add worksheetpart
+            WorksheetPart = ExcelFile.WorkbookPart.AddNewPart<WorksheetPart>();
+            SheetData = new SheetData();
+            _worksheet = new Worksheet(SheetData);
+            WorksheetPart.Worksheet = _worksheet;
+
+            var id = ExcelFile.WorkbookPart.GetIdOfPart(WorksheetPart);
+            ThisSheet = (Sheet)referenceSheet.ThisSheet.CloneNode(false);
+            ThisSheet.Id = id;
+            ThisSheet.Name = name;
+            ThisSheet.SheetId = sheetId;
+
+            var columns = new Columns();
+            columns.Append(referenceSheet._worksheet.GetFirstChild<Columns>().ChildElements.Select(e => e.CloneNode(false)));
+            _worksheet.InsertAt(columns, 0);
+            ExcelFile.Sheets.Append(ThisSheet);
+        }
+
+        /// <summary>
         /// Creates a new sheet wrapper object from a 
         /// open xml sheet class object
         /// </summary>
@@ -90,7 +118,24 @@ namespace Extension.OfficeOpenXml.Excel
         /// <returns></returns>
         public ExcelRow AddRow()
         {
-            var row = new ExcelRow(ExcelFile);
+            var index = Rows.Count == 0 ? 1 : Rows.Select(r => r.RowIndex).Max() + 1;
+            var row = new ExcelRow(ExcelFile, index);
+            SheetData.AppendChild(row.ThisRow);
+            Rows.Add(row);
+            return row;
+        }
+
+        /// <summary>
+        /// Adds a new row to the sheet
+        /// </summary>
+        /// <returns></returns>
+        public ExcelRow CopyRowFromOtherDocument(ExcelRow referenceRow)
+        {
+            var index = Rows.Count == 0 ? 1 : Rows.Select(r => r.RowIndex).Max() + 1;
+            var node = (Row)referenceRow.ThisRow.CloneNode(false);
+            var row = new ExcelRow(ExcelFile, node);
+            row.ThisRow.RowIndex = index;
+            row.CopyCellsFromOtherDocument(referenceRow.Cells);
             SheetData.AppendChild(row.ThisRow);
             Rows.Add(row);
             return row;

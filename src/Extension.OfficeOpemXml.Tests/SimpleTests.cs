@@ -1,4 +1,5 @@
-﻿using Extension.OfficeOpenXml.Excel;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Extension.OfficeOpenXml.Excel;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -56,6 +57,28 @@ namespace Extension.OfficeOpemXml.Tests
             file.Open(fileName, false);
 
             var copy = file.CopyWithStyle(GetGeneratedFilePath("Copied.xlsx"));
+            copy.Save();
+            copy.Document.Close();
+        }
+
+        /// <summary>
+        /// Copy rows to a new file
+        /// </summary>
+        [Test]
+        public void CopyRows()
+        {
+            var file = new ExcelFile();
+            var fileName = GetResourcesFilePath("Beispieltabelle.xlsx");
+            file.Open(fileName, false);
+            var sourceSheet = file.SheetList.First();
+
+            var copy = file.CopyWithStyle(GetGeneratedFilePath("CopiedRows.xlsx"), file.SheetList.First());
+            var targetSheet = copy.SheetList.First();
+            targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[0]);
+            targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[2]);
+            targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[3]);
+            targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[5]);
+            targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[6]);
             copy.Save();
             copy.Document.Close();
         }

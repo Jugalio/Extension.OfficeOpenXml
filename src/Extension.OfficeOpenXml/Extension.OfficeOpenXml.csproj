@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Falk von Ohlen</Authors>
+    <Version>0.7.0</Version>
+    <Description>An Extrension used to wrap around ms open xml</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <RepositoryType>C#</RepositoryType>
+    <RepositoryUrl>https://github.com/Jugalio/Extension.OfficeOpenXml</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,6 +16,14 @@
 
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.10.1" />
+    <PackageReference Include="Extension.Utilities" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

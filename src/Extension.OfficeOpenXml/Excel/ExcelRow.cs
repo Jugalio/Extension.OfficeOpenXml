@@ -14,16 +14,29 @@ namespace Extension.OfficeOpenXml.Excel
         /// </summary>
         public ExcelFile ExcelFile;
 
+        /// <summary>
+        /// The index of this row
+        /// </summary>
+        public uint RowIndex => ThisRow.RowIndex;
+
+        /// <summary>
+        /// The open xml row object
+        /// </summary>
         public Row ThisRow;
+
+        /// <summary>
+        /// The cell wrapper objects on this row
+        /// </summary>
         public List<ExcelCell> Cells = new List<ExcelCell>();
 
         /// <summary>
         /// Creates an empty row
         /// </summary>
-        public ExcelRow(ExcelFile file)
+        public ExcelRow(ExcelFile file, uint index)
         {
             ExcelFile = file;
             ThisRow = new Row();
+            ThisRow.RowIndex = index;
         }
 
         /// <summary>
@@ -34,7 +47,7 @@ namespace Extension.OfficeOpenXml.Excel
             ExcelFile = file;
             ThisRow = row;
 
-            foreach(Cell cell in ThisRow.ChildElements)
+            foreach (Cell cell in ThisRow.ChildElements)
             {
                 Cells.Add(new ExcelCell(ExcelFile, cell));
             }
@@ -47,8 +60,7 @@ namespace Extension.OfficeOpenXml.Excel
         public ExcelCell AddCell(string value)
         {
             var cell = new ExcelCell(ExcelFile, value);
-            ThisRow.Append(cell.ThisCell);
-            Cells.Add(cell);
+            AddNewCell(cell);
             return cell;
         }
 
@@ -59,9 +71,20 @@ namespace Extension.OfficeOpenXml.Excel
         public ExcelCell AddCell(int value)
         {
             var cell = new ExcelCell(ExcelFile, value);
+            AddNewCell(cell);
+            return cell;
+        }
+
+        /// <summary>
+        /// Adds a new cell to the row and sets the cell reference
+        /// </summary>
+        /// <param name="cell"></param>
+        private void AddNewCell(ExcelCell cell)
+        {
+            var column = Cells.LastOrDefault()?.GetNextColumnName() ?? "A";
+            cell.ThisCell.CellReference = $"{column}{RowIndex}";
             ThisRow.Append(cell.ThisCell);
             Cells.Add(cell);
-            return cell;
         }
 
         /// <summary>
@@ -70,7 +93,18 @@ namespace Extension.OfficeOpenXml.Excel
         /// <returns></returns>
         public ExcelCell GetCellByColumnName(string name)
         {
-            return Cells.FirstOrDefault(c => c.ColumnName == name);
+            return Cells.FirstOrDefault(c => c.GetColumnName() == name);
+        }
+
+        public void CopyCellsFromOtherDocument(List<ExcelCell> cells)
+        {
+            cells.ForEach(c =>
+            {
+                var cell = new ExcelCell(ExcelFile, c.GetValue());
+                cell.ThisCell.StyleIndex = c.ThisCell.StyleIndex;
+                ThisRow.Append(cell.ThisCell);
+                Cells.Add(cell);
+            });
         }
 
     }
