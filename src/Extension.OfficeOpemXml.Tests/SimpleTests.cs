@@ -74,6 +74,7 @@ namespace Extension.OfficeOpemXml.Tests
 
             var copy = file.CopyWithStyle(GetGeneratedFilePath("CopiedRows.xlsx"), file.SheetList.First());
             var targetSheet = copy.SheetList.First();
+            targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[14]);
             targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[0]);
             targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[2]);
             targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[3]);

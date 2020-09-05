@@ -3,6 +3,7 @@ using Extension.Utilities.ClassExtensions;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 using System.Text;
 
 namespace Extension.OfficeOpenXml.Excel
@@ -103,8 +104,32 @@ namespace Extension.OfficeOpenXml.Excel
                     return ThisCell.InnerText;
                 }
             }
+            else if (ThisCell.CellValue != null)
+            {
+                cellValue = ThisCell.CellValue.InnerText;
+            }
 
             return cellValue;
+        }
+
+        /// <summary>
+        /// Gets the column index of this cell 1 based as it is used in excel
+        /// </summary>
+        /// <returns></returns>
+        public int GetColumnIndex()
+        {
+            int columnNumber = 0;
+            int mulitplier = 1;
+
+            //working from the end of the letters take the ASCII code less 64 (so A = 1, B =2...etc)
+            //then multiply that number by our multiplier (which starts at 1)
+            //multiply our multiplier by 26 as there are 26 letters
+            foreach (char c in GetColumnName().ToCharArray().Reverse())
+            {
+                columnNumber += mulitplier * ((int)c - 64);
+                mulitplier = mulitplier * 26;
+            }
+            return columnNumber;
         }
 
         /// <summary>
@@ -116,6 +141,7 @@ namespace Extension.OfficeOpenXml.Excel
             var cellRef = ThisCell.CellReference?.Value;
             if (cellRef == null)
             {
+
                 return string.Empty;
             }
             else

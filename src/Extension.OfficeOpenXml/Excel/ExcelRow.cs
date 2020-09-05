@@ -119,6 +119,7 @@ namespace Extension.OfficeOpenXml.Excel
             {
                 var cell = new ExcelCell(ExcelFile, c.GetValue());
                 cell.ThisCell.StyleIndex = c.ThisCell.StyleIndex;
+                cell.ThisCell.CellFormula = c.ThisCell.CellFormula;
                 ThisRow.Append(cell.ThisCell);
                 Cells.Add(cell);
             });

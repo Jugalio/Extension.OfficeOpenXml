@@ -3,11 +3,14 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Falk von Ohlen</Authors>
-    <Version>0.7.1</Version>
+    <Version>0.8.1</Version>
     <Description>An Extrension used to wrap around ms open xml</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryType>C#</RepositoryType>
     <RepositoryUrl>https://github.com/Jugalio/Extension.OfficeOpenXml</RepositoryUrl>
+    <AssemblyVersion>0.8.1.0</AssemblyVersion>
+    <FileVersion>0.8.1.0</FileVersion>
+    <PackageReleaseNotes>...</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
