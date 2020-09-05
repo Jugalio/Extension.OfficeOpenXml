@@ -175,6 +175,8 @@ namespace Extension.OfficeOpenXml.Excel
             //Adds an empty stylesheet
             _workbookStylesPart = WorkbookPart.WorkbookStylesPart;
             Stylesheet = _workbookStylesPart.Stylesheet;
+
+            AddSharedStringTable();
         }
 
         /// <summary>
@@ -195,6 +197,25 @@ namespace Extension.OfficeOpenXml.Excel
             _workbookStylesPart = WorkbookPart.AddNewPart<WorkbookStylesPart>();
             Stylesheet = CreateDefaultStyleSheet();
             _workbookStylesPart.Stylesheet = Stylesheet;
+
+            AddSharedStringTable();
+        }
+
+        /// <summary>
+        /// Check, if a shared string table exists, if not add one
+        /// </summary>
+        private void AddSharedStringTable()
+        {
+            //Check, if a shared string table exists
+            if (WorkbookPart.SharedStringTablePart == null)
+            {
+                WorkbookPart.AddNewPart<SharedStringTablePart>();
+            }
+
+            if (WorkbookPart.SharedStringTablePart.SharedStringTable == null)
+            {
+                WorkbookPart.SharedStringTablePart.SharedStringTable = new SharedStringTable();
+            }
         }
 
         /// <summary>

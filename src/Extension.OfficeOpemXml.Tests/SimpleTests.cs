@@ -38,10 +38,7 @@ namespace Extension.OfficeOpemXml.Tests
             row.AddCell("Test 1");
             row.AddCell("Hallo");
             row.AddCell("5");
-            row.AddCell(5);
             file.Save();
-
-            var a = row.GetCellByColumnName("A").GetValue();
 
             file.Document.Close();
         }

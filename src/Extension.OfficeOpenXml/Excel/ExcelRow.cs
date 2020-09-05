@@ -66,17 +66,6 @@ namespace Extension.OfficeOpenXml.Excel
         }
 
         /// <summary>
-        /// Adds a new cell to the row
-        /// </summary>
-        /// <param name="value"></param>
-        public ExcelCell AddCell(int value)
-        {
-            var cell = new ExcelCell(ExcelFile, value);
-            AddNewCell(cell);
-            return cell;
-        }
-
-        /// <summary>
         /// Adds a new cell to the row and sets the cell reference
         /// </summary>
         /// <param name="cell"></param>
@@ -117,9 +106,9 @@ namespace Extension.OfficeOpenXml.Excel
         {
             cells.ForEach(c =>
             {
-                var cell = new ExcelCell(ExcelFile, c.GetValue());
-                cell.ThisCell.StyleIndex = c.ThisCell.StyleIndex;
-                cell.ThisCell.CellFormula = c.ThisCell.CellFormula;
+                var cell = c.ThisCell.StyleIndex == null
+                    ? new ExcelCell(ExcelFile, c.Value)
+                    : new ExcelCell(ExcelFile, c.Value, c.ThisCell.StyleIndex, c.DataType);
                 ThisRow.Append(cell.ThisCell);
                 Cells.Add(cell);
             });
