@@ -48,9 +48,16 @@ namespace Extension.OfficeOpenXml.Excel
             ExcelFile = file;
             ThisRow = row;
 
+            int i = 1;
             foreach (Cell cell in ThisRow.ChildElements)
             {
+                var nextIndex = cell.GetColumnIndex();
+                for (int j = i; j < nextIndex; j++)
+                {
+                    Cells.Add(new ExcelCell(ExcelFile, string.Empty));
+                }
                 Cells.Add(new ExcelCell(ExcelFile, cell));
+                i = nextIndex + 1;
             }
         }
 
@@ -71,7 +78,7 @@ namespace Extension.OfficeOpenXml.Excel
         /// <param name="cell"></param>
         private void AddNewCell(ExcelCell cell)
         {
-            var column = Cells.LastOrDefault()?.GetNextColumnName() ?? "A";
+            var column = Cells.LastOrDefault()?.ThisCell.GetNextColumnName() ?? "A";
             cell.ThisCell.CellReference = $"{column}{RowIndex}";
             ThisRow.Append(cell.ThisCell);
             Cells.Add(cell);
@@ -83,7 +90,7 @@ namespace Extension.OfficeOpenXml.Excel
         /// <returns></returns>
         public ExcelCell GetCellByColumnName(string name)
         {
-            return Cells.FirstOrDefault(c => c.GetColumnName() == name);
+            return Cells.FirstOrDefault(c => c.ThisCell.GetColumnName() == name);
         }
 
         /// <summary>
@@ -99,7 +106,7 @@ namespace Extension.OfficeOpenXml.Excel
                 start = start.IterateUpperLetter();
             }
 
-            return Cells.FirstOrDefault(c => c.GetColumnName() == start);
+            return Cells.FirstOrDefault(c => c.ThisCell.GetColumnName() == start);
         }
 
         public void CopyCellsFromOtherDocument(List<ExcelCell> cells)
