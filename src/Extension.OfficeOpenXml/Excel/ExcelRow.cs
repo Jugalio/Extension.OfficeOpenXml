@@ -106,9 +106,7 @@ namespace Extension.OfficeOpenXml.Excel
         {
             cells.ForEach(c =>
             {
-                var cell = c.ThisCell.StyleIndex == null
-                    ? new ExcelCell(ExcelFile, c.Value)
-                    : new ExcelCell(ExcelFile, c.Value, c.ThisCell.StyleIndex, c.DataType);
+                var cell = new ExcelCell(ExcelFile, c);
                 ThisRow.Append(cell.ThisCell);
                 Cells.Add(cell);
             });

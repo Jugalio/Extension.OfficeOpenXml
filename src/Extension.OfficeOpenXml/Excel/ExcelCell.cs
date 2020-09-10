@@ -114,6 +114,47 @@ namespace Extension.OfficeOpenXml.Excel
         }
 
         /// <summary>
+        /// Creates a new excel from a given cell
+        /// </summary>
+        /// <param name="value"></param>
+        public ExcelCell(ExcelFile file, ExcelCell refCell)
+        {
+            ExcelFile = file;
+
+            if (refCell.ThisCell.DataType == null)
+            {
+                var index = SetCellValue(refCell.Value);
+                ThisCell = new Cell()
+                {
+                    CellValue = new CellValue(refCell.Value),
+                };
+            }
+            else if (refCell.ThisCell.CellFormula != null)
+            {
+
+            }
+            else if (refCell.ThisCell.DataType == CellValues.SharedString)
+            {
+                var index = SetCellValue(refCell.Value);
+                ThisCell = new Cell()
+                {
+                    DataType = new EnumValue<CellValues>(CellValues.SharedString),
+                    CellValue = new CellValue(index.ToString()),
+                };
+            }
+            else
+            {
+                ThisCell = new Cell()
+                {
+                    CellValue = new CellValue(refCell.Value),
+                };
+            }
+
+            ThisCell.StyleIndex = refCell.ThisCell.StyleIndex;
+            ThisCell.CellFormula = refCell.ThisCell.CellFormula != null ? new CellFormula(refCell.ThisCell.CellFormula.InnerText) : null;
+        }
+
+        /// <summary>
         /// Creates a new excel cell with the given value
         /// </summary>
         /// <param name="value"></param>

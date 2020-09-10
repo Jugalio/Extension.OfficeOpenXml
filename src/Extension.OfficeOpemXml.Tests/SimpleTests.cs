@@ -71,12 +71,13 @@ namespace Extension.OfficeOpemXml.Tests
 
             var copy = file.CopyWithStyle(GetGeneratedFilePath("CopiedRows.xlsx"), file.SheetList.First());
             var targetSheet = copy.SheetList.First();
-            targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[14]);
             targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[0]);
             targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[2]);
             targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[3]);
             targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[5]);
             targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[6]);
+            targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[14]);
+            targetSheet.CopyRowFromOtherDocument(sourceSheet.Rows[15]);
             copy.Save();
             copy.Document.Close();
         }
