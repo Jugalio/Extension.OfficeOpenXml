@@ -3,14 +3,14 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Falk von Ohlen</Authors>
-    <Version>0.9.2</Version>
+    <Version>1.0.0</Version>
     <Description>An Extrension used to wrap around ms open xml</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryType>C#</RepositoryType>
     <RepositoryUrl>https://github.com/Jugalio/Extension.OfficeOpenXml</RepositoryUrl>
-    <AssemblyVersion>0.9.2.0</AssemblyVersion>
-    <FileVersion>0.9.2.0</FileVersion>
-    <PackageReleaseNotes>Fixed row copy to correctly handle empty cells</PackageReleaseNotes>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <PackageReleaseNotes>Automated cell references, renamed functions and added insertat functions for rows and cells</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

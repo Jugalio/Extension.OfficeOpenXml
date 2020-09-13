@@ -2,6 +2,7 @@
 using Extension.Utilities.ClassExtensions;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -51,13 +52,7 @@ namespace Extension.OfficeOpenXml.Excel
             int i = 1;
             foreach (Cell cell in ThisRow.ChildElements)
             {
-                var nextIndex = cell.GetColumnIndex();
-                for (int j = i; j < nextIndex; j++)
-                {
-                    Cells.Add(new ExcelCell(ExcelFile, string.Empty));
-                }
                 Cells.Add(new ExcelCell(ExcelFile, cell));
-                i = nextIndex + 1;
             }
         }
 
@@ -65,23 +60,74 @@ namespace Extension.OfficeOpenXml.Excel
         /// Adds a new cell to the row
         /// </summary>
         /// <param name="value"></param>
-        public ExcelCell AddCell(string value)
+        public ExcelCell AppendCell(string value)
         {
-            var cell = new ExcelCell(ExcelFile, value);
-            AddNewCell(cell);
+            var column = Cells.LastOrDefault()?.ThisCell.GetNextColumnName() ?? "A";
+            var cell = new ExcelCell(ExcelFile, column, value);
+            AppendCell(cell);
             return cell;
         }
 
         /// <summary>
-        /// Adds a new cell to the row and sets the cell reference
+        /// Adds a new cell to the row
         /// </summary>
-        /// <param name="cell"></param>
-        private void AddNewCell(ExcelCell cell)
+        /// <param name="value"></param>
+        public ExcelCell AppendCell(ExcelCell cell, bool clone = false)
         {
+            if (clone)
+            {
+                cell = new ExcelCell(ExcelFile, cell);
+            }
             var column = Cells.LastOrDefault()?.ThisCell.GetNextColumnName() ?? "A";
-            cell.ThisCell.CellReference = $"{column}{RowIndex}";
+            cell.ColumnName = column;
+            cell.SetCellRef(RowIndex);
             ThisRow.Append(cell.ThisCell);
             Cells.Add(cell);
+            return cell;
+        }
+
+        /// <summary>
+        /// Adds a new cell to the row without changing the column name
+        /// </summary>
+        /// <param name="value"></param>
+        public ExcelCell InsertCell(ExcelCell cell, bool clone = false)
+        {
+            return InsertCellAt(cell, cell.ColumnName, clone);
+        }
+
+        /// <summary>
+        /// Adds a new cell to the row without changing the column name
+        /// </summary>
+        /// <param name="value"></param>
+        public ExcelCell InsertCellAt(ExcelCell cell, uint columnIndex, bool clone = false)
+        {
+            return InsertCellAt(cell, GetColumnId(columnIndex), clone);
+        }
+
+        /// <summary>
+        /// Adds a new cell to the row without changing the column name
+        /// </summary>
+        /// <param name="value"></param>
+        public ExcelCell InsertCellAt(ExcelCell cell, string columnId, bool clone = false)
+        {
+            if (clone)
+            {
+                cell = new ExcelCell(ExcelFile, cell);
+            }
+
+            //If there already is a cell defined for that place move all cells right of it one to the right
+            var occupied = GetCellByColumnName(columnId);
+            if (occupied != null)
+            {
+                occupied.ColumnName = occupied.ColumnName.IterateUpperLetter();
+                GetCellsRightOf(columnId).ToList().ForEach(c => c.ColumnName = c.ColumnName.IterateUpperLetter());
+            }
+
+            cell.ColumnName = columnId;
+            cell.SetCellRef(RowIndex);
+            ThisRow.Append(cell.ThisCell);
+            Cells.Add(cell);
+            return cell;
         }
 
         /// <summary>
@@ -99,24 +145,64 @@ namespace Extension.OfficeOpenXml.Excel
         /// <returns></returns>
         public ExcelCell GetCellByColumnIndex(uint index)
         {
-            string start = "A";
+            var id = GetColumnId(index);
+            return Cells.FirstOrDefault(c => c.ThisCell.GetColumnName() == id);
+        }
+
+        /// <summary>
+        /// Append a list of cells to the end
+        /// </summary>
+        /// <param name="cells"></param>
+        public void AppendCells(List<ExcelCell> cells, bool clone = false)
+        {
+            cells.ForEach(c => AppendCell(c, clone));
+        }
+
+        /// <summary>
+        ///Insert Cells, without changing their columnname
+        /// </summary>
+        /// <param name="cells"></param>
+        public void InsertCells(List<ExcelCell> cells, bool clone = false)
+        {
+            cells.ForEach(c => InsertCell(c, clone));
+        }
+
+        /// <summary>
+        /// Get all cells right of the provided columnIndex
+        /// </summary>
+        /// <param name="columnIndex"></param>
+        /// <returns></returns>
+        public IEnumerable<ExcelCell> GetCellsRightOf(uint columnIndex)
+        {
+            return GetCellsRightOf(GetColumnId(columnIndex));
+        }
+
+
+        /// <summary>
+        /// Get all cells right of the provided columnname
+        /// </summary>
+        /// <param name="columnIndex"></param>
+        /// <returns></returns>
+        public IEnumerable<ExcelCell> GetCellsRightOf(string columnId)
+        {
+            return Cells.Where(c => c.ThisCell.GetColumnName().CompareTo(columnId) > 0);
+        }
+
+        /// <summary>
+        /// Get the columnid for the index
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private string GetColumnId(uint index)
+        {
+            string id = "A";
 
             for (uint i = 1; i < index; i++)
             {
-                start = start.IterateUpperLetter();
+                id = id.IterateUpperLetter();
             }
 
-            return Cells.FirstOrDefault(c => c.ThisCell.GetColumnName() == start);
-        }
-
-        public void CopyCellsFromOtherDocument(List<ExcelCell> cells)
-        {
-            cells.ForEach(c =>
-            {
-                var cell = new ExcelCell(ExcelFile, c);
-                ThisRow.Append(cell.ThisCell);
-                Cells.Add(cell);
-            });
+            return id;
         }
 
     }

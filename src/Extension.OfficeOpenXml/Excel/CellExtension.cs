@@ -9,7 +9,6 @@ namespace Extension.OfficeOpenXml.Excel
 {
     public static class CellExtension
     {
-
         /// <summary>
         /// Gets the column index of this cell 1 based as it is used in excel
         /// </summary>

@@ -23,9 +23,9 @@ namespace Extension.OfficeOpenXml.Excel
         public Cell ThisCell;
 
         /// <summary>
-        /// The datatype of this cell
+        /// The name of the column in whích the cell will be added
         /// </summary>
-        public CellValues DataType => ThisCell.DataType ?? CellValues.String;
+        public string ColumnName;
 
         /// <summary>
         /// Gets the value of this cell as a string
@@ -75,55 +75,16 @@ namespace Extension.OfficeOpenXml.Excel
         }
 
         /// <summary>
-        /// Creates a new cell object from open xml object
-        /// </summary>
-        /// <param name="cell"></param>
-        public ExcelCell(ExcelFile file, Cell cell)
-        {
-            ExcelFile = file;
-            ThisCell = cell;
-        }
-
-        /// <summary>
-        /// Creates a new excel cell with the given value
-        /// </summary>
-        /// <param name="value"></param>
-        public ExcelCell(ExcelFile file, string value, uint styleIndex, CellValues dataType)
-        {
-            ExcelFile = file;
-
-            if (dataType == CellValues.SharedString)
-            {
-                var index = SetCellValue(value);
-                ThisCell = new Cell()
-                {
-
-                    DataType = new EnumValue<CellValues>(CellValues.SharedString),
-                    CellValue = new CellValue(index.ToString()),
-                    StyleIndex = styleIndex,
-                };
-            }
-            else
-            {
-                ThisCell = new Cell()
-                {
-                    CellValue = new CellValue(value),
-                    StyleIndex = styleIndex,
-                };
-            }
-        }
-
-        /// <summary>
         /// Creates a new excel from a given cell
         /// </summary>
         /// <param name="value"></param>
         public ExcelCell(ExcelFile file, ExcelCell refCell)
         {
             ExcelFile = file;
+            ColumnName = refCell.ThisCell.GetColumnName();
 
             if (refCell.ThisCell.DataType == null)
             {
-                var index = SetCellValue(refCell.Value);
                 ThisCell = new Cell()
                 {
                     CellValue = new CellValue(refCell.Value),
@@ -135,7 +96,7 @@ namespace Extension.OfficeOpenXml.Excel
             }
             else if (refCell.ThisCell.DataType == CellValues.SharedString)
             {
-                var index = SetCellValue(refCell.Value);
+                var index = SetSharedCellValue(refCell.Value);
                 ThisCell = new Cell()
                 {
                     DataType = new EnumValue<CellValues>(CellValues.SharedString),
@@ -158,36 +119,22 @@ namespace Extension.OfficeOpenXml.Excel
         /// Creates a new excel cell with the given value
         /// </summary>
         /// <param name="value"></param>
-        public ExcelCell(ExcelFile file, string value, CellValues dataType)
+        public ExcelCell(ExcelFile file, Cell sdkCell)
         {
             ExcelFile = file;
+            ColumnName = sdkCell.GetColumnName();
 
-            if (dataType == CellValues.SharedString)
-            {
-                var index = SetCellValue(value);
-                ThisCell = new Cell()
-                {
-
-                    DataType = new EnumValue<CellValues>(CellValues.SharedString),
-                    CellValue = new CellValue(index.ToString()),
-                };
-            }
-            else
-            {
-                ThisCell = new Cell()
-                {
-                    CellValue = new CellValue(value),
-                };
-            }
+            ThisCell = sdkCell;
         }
 
         /// <summary>
         /// Creates a new excel cell with the given value
         /// </summary>
         /// <param name="value"></param>
-        public ExcelCell(ExcelFile file, string value)
+        public ExcelCell(ExcelFile file, string columnName, string value)
         {
             ExcelFile = file;
+            ColumnName = columnName;
 
             ThisCell = new Cell()
             {
@@ -196,12 +143,60 @@ namespace Extension.OfficeOpenXml.Excel
         }
 
         /// <summary>
-        /// Adds a style to the cell
+        /// Sets the cell reference with the row to which this cell is added
         /// </summary>
-        /// <param name="styleIndex"></param>
-        public void AddStyle(uint styleIndex)
+        /// <param name="rowIndex"></param>
+        public void SetCellRef(uint rowIndex)
         {
-            ThisCell.StyleIndex = styleIndex;
+            ThisCell.CellReference = $"{ColumnName}{rowIndex}";
+        }
+
+        /// <summary>
+        /// Sets a string value
+        /// </summary>
+        /// <param name="value"></param>
+        public void SetValue(string value)
+        {
+            var index = SetSharedCellValue(value);
+            ThisCell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            ThisCell.CellValue = new CellValue(index.ToString());
+        }
+
+        /// <summary>
+        /// Sets a int value
+        /// </summary>
+        /// <param name="value"></param>
+        public void SetValue(int value)
+        {
+            ThisCell.CellValue = new CellValue(value.ToString());
+        }
+
+        /// <summary>
+        /// Sets a double value
+        /// </summary>
+        /// <param name="value"></param>
+        public void SetValue(double value)
+        {
+            ThisCell.CellValue = new CellValue(value.ToString());
+        }
+
+        /// <summary>
+        /// Sets a long value
+        /// </summary>
+        /// <param name="value"></param>
+        public void SetValue(long value)
+        {
+            ThisCell.CellValue = new CellValue(value.ToString());
+        }
+
+        /// <summary>
+        /// Sets a formula for this cell
+        /// </summary>
+        /// <param name="value"></param>
+        public void SetFormual(string value)
+        {
+            ThisCell.CellFormula = new CellFormula(value);
+            ThisCell.DataType = null;
         }
 
         /// <summary>
@@ -209,7 +204,7 @@ namespace Extension.OfficeOpenXml.Excel
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        private int SetCellValue(string value)
+        private int SetSharedCellValue(string value)
         {
             int i = 0;
 

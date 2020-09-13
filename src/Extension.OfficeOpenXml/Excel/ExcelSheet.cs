@@ -116,7 +116,7 @@ namespace Extension.OfficeOpenXml.Excel
         /// Adds a new row to the sheet
         /// </summary>
         /// <returns></returns>
-        public ExcelRow AddRow()
+        public ExcelRow AppendNewRow()
         {
             var index = Rows.Count == 0 ? 1 : Rows.Select(r => r.RowIndex).Max() + 1;
             var row = new ExcelRow(ExcelFile, index);
@@ -129,13 +129,35 @@ namespace Extension.OfficeOpenXml.Excel
         /// Adds a new row to the sheet
         /// </summary>
         /// <returns></returns>
-        public ExcelRow CopyRowFromOtherDocument(ExcelRow referenceRow)
+        public ExcelRow AppendRow(ExcelRow referenceRow, bool clone = false)
         {
             var index = Rows.Count == 0 ? 1 : Rows.Select(r => r.RowIndex).Max() + 1;
             var node = (Row)referenceRow.ThisRow.CloneNode(false);
             var row = new ExcelRow(ExcelFile, node);
             row.ThisRow.RowIndex = index;
-            row.CopyCellsFromOtherDocument(referenceRow.Cells);
+            row.InsertCells(referenceRow.Cells, clone);
+            SheetData.AppendChild(row.ThisRow);
+            Rows.Add(row);
+            return row;
+        }
+
+        /// <summary>
+        /// Adds a new row to the sheet
+        /// </summary>
+        /// <returns></returns>
+        public ExcelRow InsertRowAt(ExcelRow referenceRow, uint index, bool clone = false)
+        {
+            var occupied = Rows.FirstOrDefault(r => r.RowIndex == index);
+            if (occupied != null)
+            {
+                Rows.Where(r => r.RowIndex > index).ToList().ForEach(r => r.ThisRow.RowIndex++);
+                occupied.ThisRow.RowIndex++;
+            }
+
+            var node = (Row)referenceRow.ThisRow.CloneNode(false);
+            var row = new ExcelRow(ExcelFile, node);
+            row.ThisRow.RowIndex = index;
+            row.InsertCells(referenceRow.Cells, clone);
             SheetData.AppendChild(row.ThisRow);
             Rows.Add(row);
             return row;

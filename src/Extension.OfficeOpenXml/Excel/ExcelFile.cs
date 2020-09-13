@@ -89,7 +89,7 @@ namespace Extension.OfficeOpenXml.Excel
             Document = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook);
 
             GenerateEmptyChildElements();
-            AddSheet("Sheet1");
+            AppendSheet("Sheet1");
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace Extension.OfficeOpenXml.Excel
             Document = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook);
 
             GenerateEmptyChildElements();
-            AddSheet("Sheet1", referenceSheet);
+            AppendSheet("Sheet1", referenceSheet);
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace Extension.OfficeOpenXml.Excel
         /// Adds a new sheet
         /// </summary>
         /// <param name="name"></param>
-        public void AddSheet(string name)
+        public void AppendSheet(string name)
         {
             var maxId = SheetList.Select(s => s.ThisSheet.SheetId).Max() ?? 0;
             var sheet = new ExcelSheet(this, name, maxId + 1);
@@ -148,7 +148,7 @@ namespace Extension.OfficeOpenXml.Excel
         /// Adds a new sheet
         /// </summary>
         /// <param name="name"></param>
-        public void AddSheet(string name, ExcelSheet referenceSheet)
+        public void AppendSheet(string name, ExcelSheet referenceSheet)
         {
             var maxId = SheetList.Select(s => s.ThisSheet.SheetId).Max() ?? 0;
             var sheet = new ExcelSheet(this, name, maxId + 1, referenceSheet);
