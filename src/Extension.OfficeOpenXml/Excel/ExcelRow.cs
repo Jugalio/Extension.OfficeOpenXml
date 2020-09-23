@@ -87,6 +87,61 @@ namespace Extension.OfficeOpenXml.Excel
         }
 
         /// <summary>
+        /// Removes a given cell from the row
+        /// </summary>
+        /// <param name="cell"></param>
+        public void RemoveCell(ExcelCell cell, bool moveAllRightOf = false)
+        {
+            if (cell != null)
+            {
+                if (Cells.Contains(cell))
+                {
+                    Cells.Remove(cell);
+                    cell.ThisCell.Remove();
+                }
+                if (moveAllRightOf)
+                {
+                    foreach (var c in GetCellsRightOf(cell.ColumnName))
+                    {
+                        c.MoveLeft(RowIndex);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes a given cell from the row
+        /// </summary>
+        /// <param name="cell"></param>
+        public void RemoveCell(string columnId, bool moveAllRightOf = false)
+        {
+            RemoveCell(GetCellByColumnName(columnId), false);
+            if (moveAllRightOf)
+            {
+                foreach (var c in GetCellsRightOf(columnId))
+                {
+                    c.MoveLeft(RowIndex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes a given cell from the row
+        /// </summary>
+        /// <param name="cell"></param>
+        public void RemoveCell(uint columnIndex, bool moveAllRightOf = false)
+        {
+            RemoveCell(GetCellByColumnIndex(columnIndex), false);
+            if (moveAllRightOf)
+            {
+                foreach (var c in GetCellsRightOf(GetColumnId(columnIndex)))
+                {
+                    c.MoveLeft(RowIndex);
+                }
+            }
+        }
+
+        /// <summary>
         /// Adds a new cell to the row without changing the column name
         /// </summary>
         /// <param name="value"></param>
@@ -117,15 +172,27 @@ namespace Extension.OfficeOpenXml.Excel
 
             //If there already is a cell defined for that place move all cells right of it one to the right
             var occupied = GetCellByColumnName(columnId);
+            var toTheRight = GetCellsRightOf(columnId).ToList();
+            var firstToTheRight = toTheRight.FirstOrDefault();
             if (occupied != null)
             {
-                occupied.ColumnName = occupied.ColumnName.IterateUpperLetter();
-                GetCellsRightOf(columnId).ToList().ForEach(c => c.ColumnName = c.ColumnName.IterateUpperLetter());
+                occupied.MoveRight(RowIndex);
+                toTheRight.ForEach(c =>
+                {
+                    c.MoveRight(RowIndex);
+                });
             }
 
             cell.ColumnName = columnId;
             cell.SetCellRef(RowIndex);
-            ThisRow.Append(cell.ThisCell);
+            if (firstToTheRight != null)
+            {
+                ThisRow.InsertBefore(cell.ThisCell, occupied.ThisCell);
+            }
+            else
+            {
+                ThisRow.Append(cell.ThisCell);
+            }
             Cells.Add(cell);
             return cell;
         }
@@ -177,7 +244,6 @@ namespace Extension.OfficeOpenXml.Excel
             return GetCellsRightOf(GetColumnId(columnIndex));
         }
 
-
         /// <summary>
         /// Get all cells right of the provided columnname
         /// </summary>
@@ -186,6 +252,34 @@ namespace Extension.OfficeOpenXml.Excel
         public IEnumerable<ExcelCell> GetCellsRightOf(string columnId)
         {
             return Cells.Where(c => c.ThisCell.GetColumnName().CompareTo(columnId) > 0);
+        }
+
+        /// <summary>
+        /// Moves a full column within this row
+        /// </summary>
+        /// <param name="currentColumnIndex"></param>
+        /// <param name="newColumnIndex"></param>
+        internal void MoveColumn(uint currentColumnIndex, uint newColumnIndex)
+        {
+            MoveColumn(GetColumnId(currentColumnIndex), GetColumnId(newColumnIndex));
+        }
+
+        /// <summary>
+        /// Moves a full column within this row
+        /// </summary>
+        /// <param name="currentColumnId"></param>
+        /// <param name="newColumnId"></param>
+        internal void MoveColumn(string currentColumnId, string newColumnId)
+        {
+            if (currentColumnId != newColumnId)
+            {
+                var refCell = GetCellByColumnName(currentColumnId);
+                if (refCell != null)
+                {
+                    RemoveCell(refCell, true);
+                    InsertCellAt(refCell, newColumnId, true);
+                }
+            }
         }
 
         /// <summary>
@@ -203,6 +297,24 @@ namespace Extension.OfficeOpenXml.Excel
             }
 
             return id;
+        }
+
+        /// <summary>
+        /// Get the columnid for the index
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private uint GetColumnIndex(string id)
+        {
+            uint index = 1;
+
+            while (id != "A")
+            {
+                id = id.ReverseIterateUpperLetter();
+                index++;
+            }
+
+            return index;
         }
 
     }

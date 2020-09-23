@@ -99,13 +99,55 @@ namespace Extension.OfficeOpemXml.Tests
         /// Copy rows to a new file
         /// </summary>
         [Test]
-        public void GetColumn()
+        public void GetColumn_Test()
         {
             var file = new ExcelFile();
             var fileName = GetResourcesFilePath("Beispieltabelle.xlsx");
             file.Open(fileName, false);
             var sourceSheet = file.SheetList.First();
             sourceSheet.Rows.First().GetCellByColumnIndex(28);
+        }
+
+        /// <summary>
+        /// Copy rows to a new file
+        /// </summary>
+        [Test]
+        public void RemoveColumn_Test()
+        {
+            var targetFile = GetGeneratedFilePath("RemoveColumn.xlsx");
+            File.Copy(GetResourcesFilePath("Beispieltabelle.xlsx"), targetFile, true);
+
+            var file = new ExcelFile();
+            using (FileStream fs = new FileStream(targetFile, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+            {
+                file.Open(fs, true);
+                var sourceSheet = file.SheetList.First();
+
+                sourceSheet.RemoveColumn("B");
+                file.Save();
+                file.Document.Close();
+            }
+        }
+
+        /// <summary>
+        /// Copy rows to a new file
+        /// </summary>
+        [Test]
+        public void MoveColumn_Test()
+        {
+            var targetFile = GetGeneratedFilePath("MoveColumn.xlsx");
+            File.Copy(GetResourcesFilePath("Beispieltabelle.xlsx"), targetFile, true);
+
+            var file = new ExcelFile();
+            using (FileStream fs = new FileStream(targetFile, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+            {
+                file.Open(fs, true);
+                var sourceSheet = file.SheetList.First();
+
+                sourceSheet.MoveColumn("B", "D");
+                file.Save();
+                file.Document.Close();
+            }
         }
 
     }

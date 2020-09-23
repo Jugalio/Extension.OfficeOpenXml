@@ -1,6 +1,8 @@
 ﻿using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Extension.Utilities.ClassExtensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -99,14 +101,14 @@ namespace Extension.OfficeOpenXml.Excel
         /// <param name="sheet"></param>
         public ExcelSheet(ExcelFile file, Sheet sheet)
         {
-            ExcelFile = file; 
+            ExcelFile = file;
             ThisSheet = sheet;
 
             WorksheetPart = (WorksheetPart)ExcelFile.WorkbookPart.GetPartById(sheet.Id);
             _worksheet = WorksheetPart.Worksheet;
             SheetData = _worksheet.GetFirstChild<SheetData>();
 
-            foreach(Row row in SheetData.ChildElements)
+            foreach (Row row in SheetData.ChildElements)
             {
                 Rows.Add(new ExcelRow(ExcelFile, row));
             }
@@ -164,6 +166,127 @@ namespace Extension.OfficeOpenXml.Excel
         }
 
         /// <summary>
+        /// Moves a full column within this sheet
+        /// </summary>
+        /// <param name="currentColumnIndex"></param>
+        /// <param name="newColumnIndex"></param>
+        public void MoveColumn(uint currentColumnIndex, uint newColumnIndex)
+        {
+            Rows.ForEach(r => r.MoveColumn(currentColumnIndex, newColumnIndex));
+            MoveColumnDef(currentColumnIndex, newColumnIndex);
+        }
+
+        /// <summary>
+        /// Moves a full column within this sheet
+        /// </summary>
+        /// <param name="currentColumnId"></param>
+        /// <param name="newColumnId"></param>
+        public void MoveColumn(string currentColumnId, string newColumnId)
+        {
+            Rows.ForEach(r => r.MoveColumn(currentColumnId, newColumnId));
+            MoveColumnDef(GetColumnIndex(currentColumnId), GetColumnIndex(newColumnId));
+        }
+
+        /// <summary>
+        /// Moves the column def, which is its style definition
+        /// </summary>
+        internal void MoveColumnDef(uint currentColumnIndex, uint newColumnIndex)
+        {
+            var columns = _worksheet.GetFirstChild<Columns>().ChildElements.ToList().Cast<Column>();
+            var target = columns.FirstOrDefault(c => c.Min <= currentColumnIndex && c.Max >= currentColumnIndex);
+            if (target != null)
+            {
+                var styleToInsert = (Column)target.CloneNode(true);
+                RemoveColumnStyle(currentColumnIndex);
+                InsertColumnStyle(newColumnIndex, styleToInsert);
+            }
+        }
+
+        /// <summary>
+        /// Removes the full column
+        /// </summary>
+        /// <param name="columnId"></param>
+        /// <param name="moveAllRightOf"></param>
+        public void RemoveColumn(string columnId, bool moveAllRightOf = true)
+        {
+            var index = GetColumnIndex(columnId);
+            Rows.ForEach(r => r.RemoveCell(columnId, moveAllRightOf));
+            if (moveAllRightOf)
+            {
+                RemoveColumnStyle(index);
+            }
+        }
+
+        /// <summary>
+        /// Inserts the column style at a given index
+        /// </summary>
+        /// <param name="index"></param>
+        internal void InsertColumnStyle(uint index, Column style)
+        {
+            style.Min = index;
+            style.Max = index;
+            var columns = _worksheet.GetFirstChild<Columns>().ChildElements.ToList().Cast<Column>();
+            var target = columns.FirstOrDefault(c => c.Min <= index && c.Max >= index);
+            if (target != null)
+            {
+                if (target.Min == target.Max || target.Min == index)
+                {
+                    //This also includes target
+                    foreach (var c in columns.Where(c => c.Min >= index))
+                    {
+                        c.Min++;
+                        c.Max++;
+                    }
+                    _worksheet.GetFirstChild<Columns>().InsertBefore(style, target);
+                }
+                else
+                {
+                    var splitMax = target.Max + 1;
+                    target.Max = index - 1;
+                    _worksheet.GetFirstChild<Columns>().InsertAfter(style, target);
+                    var targetSplit = (Column)target.CloneNode(true);
+                    targetSplit.Min = index + 1;
+                    targetSplit.Max = splitMax;
+                    _worksheet.GetFirstChild<Columns>().InsertAfter(targetSplit, style);
+
+                    foreach (var c in columns.Where(c => c.Min > splitMax))
+                    {
+                        c.Min++;
+                        c.Max++;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes the column style at a given index
+        /// </summary>
+        /// <param name="index"></param>
+        internal void RemoveColumnStyle(uint index)
+        {
+            var count = _worksheet.GetFirstChild<Columns>().ChildElements.Count;
+            var columns = _worksheet.GetFirstChild<Columns>().ChildElements.ToList().Cast<Column>();
+            var target = columns.FirstOrDefault(c => c.Min <= index && c.Max >= index);
+            if (target != null)
+            {
+                if (target.Min == target.Max)
+                {
+                    target.Remove();
+                }
+                else
+                {
+                    target.Max--;
+                }
+
+                foreach (var c in columns.Where(c => c.Min > index))
+                {
+                    c.Min--;
+                    c.Max--;
+                }
+            }
+        }
+
+        /// <summary>
         /// Creates an empty sheet and attach it to the excel file
         /// </summary>
         /// <param name="name"></param>
@@ -176,6 +299,24 @@ namespace Extension.OfficeOpenXml.Excel
                 SheetId = sheetId,
             };
             ExcelFile.Sheets.Append(ThisSheet);
+        }
+
+        /// <summary>
+        /// Get the columnid for the index
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private uint GetColumnIndex(string id)
+        {
+            uint index = 1;
+
+            while (id != "A")
+            {
+                id = id.ReverseIterateUpperLetter();
+                index++;
+            }
+
+            return index;
         }
 
     }

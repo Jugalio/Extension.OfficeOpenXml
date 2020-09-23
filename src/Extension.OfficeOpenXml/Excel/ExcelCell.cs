@@ -83,16 +83,17 @@ namespace Extension.OfficeOpenXml.Excel
             ExcelFile = file;
             ColumnName = refCell.ThisCell.GetColumnName();
 
-            if (refCell.ThisCell.DataType == null)
+            if (refCell.ThisCell.CellFormula != null)
+            {
+                //If a cell formula is defined we do not set the cell value
+                ThisCell = new Cell();
+            }
+            else if (refCell.ThisCell.DataType == null)
             {
                 ThisCell = new Cell()
                 {
                     CellValue = new CellValue(refCell.Value),
                 };
-            }
-            else if (refCell.ThisCell.CellFormula != null)
-            {
-
             }
             else if (refCell.ThisCell.DataType == CellValues.SharedString)
             {
@@ -140,6 +141,56 @@ namespace Extension.OfficeOpenXml.Excel
             {
                 CellValue = new CellValue(value),
             };
+        }
+
+        /// <summary>
+        /// Moves a cell one column to the right
+        /// After this the SetCellRef has to be called
+        /// </summary>
+        internal void MoveRight(uint rowIndex)
+        {
+            var oldCellRef = ThisCell.CellReference;
+            ColumnName = ColumnName.IterateUpperLetter();
+            SetCellRef(rowIndex);
+
+            //If the cell includes a formula, we also have to update the calculation cell
+            if (ThisCell.CellFormula != null)
+            {
+                ThisCell.CellValue = null;
+                var calculationChainPart = ExcelFile.WorkbookPart.CalculationChainPart;
+                var calculationChain = calculationChainPart.CalculationChain;
+                var calculationCells = calculationChain.Elements<CalculationCell>().ToList();
+                var calculationCell = calculationCells.Where(calcCell => calcCell.CellReference == oldCellRef).FirstOrDefault();
+                if (calculationCell != null)
+                {
+                    calculationCell.CellReference = ThisCell.CellReference;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Moves a cell one column to the right
+        /// After this the SetCellRef has to be called
+        /// </summary>
+        internal void MoveLeft(uint rowIndex)
+        {
+            var oldCellRef = ThisCell.CellReference;
+            ColumnName = ColumnName.ReverseIterateUpperLetter();
+            SetCellRef(rowIndex);
+
+            //If the cell includes a formula, we also have to update the calculation cell
+            if (ThisCell.CellFormula != null)
+            {
+                ThisCell.CellValue = null;
+                var calculationChainPart = ExcelFile.WorkbookPart.CalculationChainPart;
+                var calculationChain = calculationChainPart.CalculationChain;
+                var calculationCells = calculationChain.Elements<CalculationCell>().ToList();
+                var calculationCell = calculationCells.Where(calcCell => calcCell.CellReference == oldCellRef).FirstOrDefault();
+                if (calculationCell != null)
+                {
+                    calculationCell.CellReference = ThisCell.CellReference;
+                }
+            }
         }
 
         /// <summary>
